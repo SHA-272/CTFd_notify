@@ -6,44 +6,14 @@ from CTFd.utils.modes import TEAMS_MODE, get_mode_as_word, get_model
 from CTFd.utils import get_config, set_config
 from CTFd.utils.decorators import admins_only
 from CTFd.models import Solves, db
-from CTFd.utils.logging import log
 
 
-def escape_markdown(text):
-    badchars = [
-        "\\",
-        "_",
-        "*",
-        "[",
-        "]",
-        "(",
-        ")",
-        "~",
-        "`",
-        ">",
-        "#",
-        "+",
-        "-",
-        "=",
-        "|",
-        "{",
-        "}",
-        ".",
-        "!",
-    ]
-    for char in badchars:
-        text = text.replace(char, "\\" + char)
-    return text
-
-
-def notify_first_blood(solver_name, challenge_name):
+def notify_telegram(text):
     token = get_config("notifier_telegram_bot_token")
     chat_id = get_config("notifier_telegram_chat_id")
 
     if not token or not chat_id:
         return
-
-    text = f"🩸 *Первая кровь!*\n{solver_name} первым решил задачу {challenge_name}!"
 
     requests.post(
         f"https://api.telegram.org/bot{token}/sendMessage",
@@ -70,14 +40,9 @@ def load(app):
                     errors.append("Укажите токен и chat ID перед отправкой теста.")
                 else:
                     try:
-                        test_text = (
-                            "*Тестовое сообщение*\nЕсли ты это видишь — всё работает ✅"
-                        )
+                        test_text = "✅ Тестовое сообщение"
 
-                        requests.post(
-                            f"https://api.telegram.org/bot{token}/sendMessage",
-                            json={"chat_id": chat_id, "text": test_text},
-                        )
+                        notify_telegram(test_text)
                     except Exception as e:
                         errors.append(f"Ошибка при отправке: {e}")
 
@@ -120,7 +85,9 @@ def load(app):
                     _external=True,
                     _anchor=f"{challenge.name}-{challenge.id}",
                 )
-                notify_first_blood(solver.name, challenge.name)
+
+                text = f"🩸 Первое решение задания {solver.name} от {challenge.name}!"
+                notify_telegram(text)
 
         return wrapper
 

@@ -3,8 +3,8 @@
 {% block content %}
 <div class="jumbotron">
   <div class="container">
-    <h1>Telegram Notifier</h1>
-    <h4>Уведомления о первых решениях задач в Telegram</h4>
+    <h1>Notifier</h1>
+    <h4>Уведомления</h4>
   </div>
 </div>
 
@@ -26,9 +26,19 @@
           <small class="form-text text-muted">
             Токен Telegram-бота от <a href="https://t.me/botfather" target="_blank">BotFather</a>
           </small>
-          <input class="form-control" id="notifier_telegram_bot_token" name="notifier_telegram_bot_token" type="text"
+          <input class="form-control" id="telegram_bot_token" name="telegram_bot_token" type="text"
                  placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
-                 {% if notifier_telegram_bot_token %}value="{{ notifier_telegram_bot_token }}"{% endif %}>
+                 {% if telegram_bot_token %}value="{{ telegram_bot_token }}"{% endif %}>
+        </div>
+
+        <div class="form-group">
+          <label>Admin ID</label>
+          <small class="form-text text-muted">
+            ID админа (например, <code>1234567890</code>)
+          </small>
+          <input class="form-control" id="telegram_admin_id" name="telegram_admin_id" type="text"
+                 placeholder="1234567890"
+                 {% if telegram_admin_id %}value="{{ telegram_admin_id }}"{% endif %}>
         </div>
 
         <div class="form-group">
@@ -36,9 +46,9 @@
           <small class="form-text text-muted">
             ID чата (например, <code>-1001234567890</code> для группы)
           </small>
-          <input class="form-control" id="notifier_telegram_chat_id" name="notifier_telegram_chat_id" type="text"
+          <input class="form-control" id="telegram_chat_id" name="telegram_chat_id" type="text"
                  placeholder="-1001234567890"
-                 {% if notifier_telegram_chat_id %}value="{{ notifier_telegram_chat_id }}"{% endif %}>
+                 {% if telegram_chat_id %}value="{{ telegram_chat_id }}"{% endif %}>
         </div>
 
         <input type="hidden" name="nonce" value="{{ nonce }}">
