@@ -3,58 +3,78 @@
 {% block content %}
 <div class="jumbotron">
   <div class="container">
-    <h1>Notifier</h1>
-    <h4>Уведомления</h4>
+    <h1>Уведомления</h1>
   </div>
 </div>
 
 <div class="container">
   <div class="row">
     <div class="col-md-12">
-      {% for error in errors %}
-        <div class="alert alert-danger alert-dismissable" role="alert">
-          {{ error }}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-      {% endfor %}
-
       <form method="POST" autocomplete="off">
         <div class="form-group">
-          <label>Bot Token</label>
+          <label>Присылать уведомления на платформе</label>
+          <input id="notify_ctfd" name="notify_ctfd" type="checkbox" {% if notify_ctfd %}checked{% endif %}>
+        </div>
+        <div class="form-group">
+          <label>Присылать уведомления в Telegram</label>
+          <input id="notify_telegram" name="notify_telegram" type="checkbox" {% if notify_telegram %}checked{% endif %}>
           <small class="form-text text-muted">
             Токен Telegram-бота от <a href="https://t.me/botfather" target="_blank">BotFather</a>
           </small>
           <input class="form-control" id="telegram_bot_token" name="telegram_bot_token" type="text"
-                 placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
-                 {% if telegram_bot_token %}value="{{ telegram_bot_token }}"{% endif %}>
-        </div>
-
-        <div class="form-group">
-          <label>Admin ID</label>
+            placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" {% if telegram_bot_token
+            %}value="{{ telegram_bot_token }}" {% endif %}>
           <small class="form-text text-muted">
             ID админа (например, <code>1234567890</code>)
           </small>
           <input class="form-control" id="telegram_admin_id" name="telegram_admin_id" type="text"
-                 placeholder="1234567890"
-                 {% if telegram_admin_id %}value="{{ telegram_admin_id }}"{% endif %}>
-        </div>
-
-        <div class="form-group">
-          <label>Chat ID</label>
+            placeholder="1234567890" {% if telegram_admin_id %}value="{{ telegram_admin_id }}" {% endif %}>
           <small class="form-text text-muted">
             ID чата (например, <code>-1001234567890</code> для группы)
           </small>
           <input class="form-control" id="telegram_chat_id" name="telegram_chat_id" type="text"
-                 placeholder="-1001234567890"
-                 {% if telegram_chat_id %}value="{{ telegram_chat_id }}"{% endif %}>
+            placeholder="-1001234567890" {% if telegram_chat_id %}value="{{ telegram_chat_id }}" {% endif %}>
+          <button type="submit" name="test_message" value="1" class="btn btn-secondary">Проверка бота</button>
+        </div>
+
+        <div class="form-group">
+          <label>Уведомлять при первом решении</label>
+          <input id="notify_firstblood" name="notify_firstblood" type="checkbox" {% if notify_firstblood %}checked{%
+            endif %}>
+          <small class="form-text text-muted">
+            Текст уведомления
+          </small>
+          <textarea class="form-control" id="firstblood_text" name="firstblood_text" type="text"
+            placeholder="Первое решение задания {challenge} от {solver}!">{{ firstblood_text }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Уведомления времени</label>
+          <input id="notify_timing" name="notify_timing" type="checkbox" {% if notify_timing %}checked{% endif %}>
+          <small class="form-text text-muted">
+            Текст при начале CTF</small>
+          <textarea class="form-control" name="ctf_start_text"
+            placeholder="CTF начался!">{{ ctf_start_text }}</textarea>
+          <small class="form-text text-muted">
+            Текст при окончании CTF</small>
+          <textarea class="form-control" name="ctf_end_text" placeholder="CTF закончился!">{{ ctf_end_text }}</textarea>
+          <small class="form-text text-muted">
+            Предупреждать за (в минутах)</small>
+          <input class="form-control" type="number" name="ctf_warn_minutes" value="{{ ctf_warn_minutes or 15 }}" min="1"
+            max="60">
+          <small class="form-text text-muted">
+            Текст при предупреждении о начале</small>
+          <textarea class="form-control" name="ctf_warn_start_text"
+            placeholder="CTF начался через {minutes} минут!">{{ ctf_warn_start_text }}</textarea>
+          <small class="form-text text-muted">
+            Текст при предупреждении о конце</small>
+          <textarea class="form-control" name="ctf_warn_end_text"
+            placeholder="CTF закончится через {minutes} минут!">{{ ctf_warn_end_text }}</textarea>
         </div>
 
         <input type="hidden" name="nonce" value="{{ nonce }}">
         <div class="d-flex justify-content-end gap-3">
           <button type="submit" class="btn btn-primary">Сохранить</button>
-          <button type="submit" name="test_message" value="1" class="btn btn-secondary">Отправить тестовое сообщение</button>
         </div>
 
       </form>
