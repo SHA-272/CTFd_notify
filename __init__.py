@@ -1,4 +1,5 @@
 import requests
+import threading, time
 from flask import (
     Blueprint,
     request,
@@ -108,7 +109,7 @@ def load(app):
             set_config("ctf_start_text", ctf_start_text)
             ctf_end_text = request.form.get("ctf_end_text").strip()
             set_config("ctf_end_text", ctf_end_text)
-            ctf_warn_minutes = request.form.get("ctf_warn_minutes")
+            ctf_warn_minutes = int(request.form.get("ctf_warn_minutes"))
             set_config("ctf_warn_minutes", ctf_warn_minutes)
             ctf_warn_start_text = request.form.get("ctf_warn_start_text").strip()
             set_config("ctf_warn_start_text", ctf_warn_start_text)
@@ -128,11 +129,11 @@ def load(app):
             "telegram_bot_token": get_config("telegram_bot_token"),
             "telegram_admin_id": get_config("telegram_admin_id"),
             "telegram_chat_id": get_config("telegram_chat_id"),
-            "notify_firstblood": get_config("notify_firstblood", True),
+            "notify_firstblood": get_config("notify_firstblood", False),
             "firstblood_text": get_config(
                 "firstblood_text", "First task solve {challenge} by {solver}!"
             ),
-            "notify_timing": get_config("notify_timing", True),
+            "notify_timing": get_config("notify_timing", False),
             "ctf_start_text": get_config("ctf_start_text", "CTF started!"),
             "ctf_end_text": get_config("ctf_end_text", "CTF ended!"),
             "ctf_warn_minutes": get_config("ctf_warn_minutes", 15),
@@ -153,7 +154,7 @@ def load(app):
         def wrapper(user, team, challenge, request):
             chal_solve_func(user, team, challenge, request)
 
-            notify_firstblood = get_config("notify_firstblood", True)
+            notify_firstblood = get_config("notify_firstblood", False)
             if not notify_firstblood:
                 return
 
@@ -177,4 +178,73 @@ def load(app):
 
         return wrapper
 
+    start_scheduler(app)
+
     BaseChallenge.solve = chal_solve_decorator(BaseChallenge.solve)
+
+
+def start_scheduler(app):
+    def check_ctf_times():
+        flags = {
+            "start_sent": False,
+            "end_sent": False,
+            "warn_start_sent": False,
+            "warn_end_sent": False,
+        }
+
+        with app.app_context():
+            while True:
+                now = int(time.time())
+                start_time = int(get_config("start") or 0)
+                end_time = int(get_config("end") or 0)
+                warn_minutes = int(get_config("ctf_warn_minutes", 15))
+                notify_timing = get_config("notify_timing", False)
+
+                if not notify_timing:
+                    return
+
+                if (
+                    start_time
+                    and (start_time - warn_minutes * 60 <= now < start_time)
+                    and not flags["warn_start_sent"]
+                ):
+                    send_notify(
+                        "CTF start",
+                        get_config(
+                            "ctf_warn_start_text", "CTF starts in {minutes} minutes!"
+                        ).format(minutes=warn_minutes),
+                    )
+                    flags["warn_start_sent"] = True
+
+                if start_time and now >= start_time and not flags["start_sent"]:
+                    send_notify(
+                        "CTF start", get_config("ctf_start_text", "CTF started!")
+                    )
+                    flags["start_sent"] = True
+
+                if (
+                    end_time
+                    and (end_time - warn_minutes * 60 <= now < end_time)
+                    and not flags["warn_end_sent"]
+                ):
+                    send_notify(
+                        "CTF end",
+                        get_config(
+                            "ctf_warn_end_text", "CTF ends in {minutes} minutes!"
+                        ).format(minutes=warn_minutes),
+                    )
+                    flags["warn_end_sent"] = True
+
+                if end_time and now >= end_time and not flags["end_sent"]:
+                    send_notify("CTF end", get_config("ctf_end_text", "CTF ended!"))
+                    flags["end_sent"] = True
+
+                time.sleep(60)
+
+    def send_notify(title, message):
+        if message:
+            send_notify_telegram(message)
+            send_notify_ctfd(title, message)
+
+    scheduler_thread = threading.Thread(target=check_ctf_times, daemon=True)
+    scheduler_thread.start()
