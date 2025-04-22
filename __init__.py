@@ -1,5 +1,4 @@
 import requests
-import threading, time
 from flask import (
     Blueprint,
     request,
